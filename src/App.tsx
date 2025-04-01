@@ -2,11 +2,13 @@ import { useState, useEffect } from "react";
 import "./App.css";
 
 import Line from "./components/Line";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 const WORD_API = "https://random-word-api.herokuapp.com/word?length=5";
+const WORD_EXIST_API = "https://api.dictionaryapi.dev/api/v2/entries/en/";
 
 function App() {
+  const queryClient = useQueryClient();
   const [guesses, setGuesses] = useState([
     ["", "", "", "", ""],
     ["", "", "", "", ""],
@@ -18,13 +20,21 @@ function App() {
   const [guessIndex, setGuessIndex] = useState(0);
   const [letterIndex, setLetterIndex] = useState(0);
   const [allowType, setAllowType] = useState(true);
-  const { data: WORD, isLoading } = useQuery({
+  const { data: WORD, isLoading: isLoadingWord } = useQuery({
     queryFn: async () => {
       const res = await fetch(WORD_API);
       return res.json();
     },
     queryKey: ["word"],
+    refetchOnWindowFocus: false,
   });
+
+  const WORD_TO_CHECK =
+    guesses[guessIndex].join("") === ""
+      ? "lllll"
+      : guesses[guessIndex].join("");
+
+  console.log("correct word is: " + WORD);
 
   useEffect(() => {
     const checkGuess = () => {
@@ -55,17 +65,39 @@ function App() {
         setGuesses(newGuesses);
         setLetterIndex((prev) => prev + 1);
       } else if (e.key === "Enter") {
-        checkGuess();
-        setGuessIndex((prev) => prev + 1);
-        setLetterIndex(0);
+        queryClient
+          .fetchQuery({
+            queryKey: ["exist", WORD_TO_CHECK],
+            queryFn: async () => {
+              const res = await fetch(WORD_EXIST_API + WORD_TO_CHECK);
+              return res.json();
+            },
+          })
+          .then((data) => {
+            if (Array.isArray(data)) {
+              checkGuess();
+              setGuessIndex((prev) => prev + 1);
+              setLetterIndex(0);
+            } else {
+              alert("That word does not exist or at least I do not know it");
+            }
+          });
       }
     };
 
     document.addEventListener("keydown", typeWord);
     return () => document.removeEventListener("keydown", typeWord);
-  }, [allowType, guessIndex, guesses, letterIndex]);
+  }, [
+    WORD,
+    WORD_TO_CHECK,
+    allowType,
+    guessIndex,
+    guesses,
+    letterIndex,
+    queryClient,
+  ]);
 
-  if (isLoading) {
+  if (isLoadingWord) {
     return <p>Loading...</p>;
   }
 
