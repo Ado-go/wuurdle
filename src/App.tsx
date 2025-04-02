@@ -54,6 +54,7 @@ function App() {
   const WORD_TO_CHECK = guesses[guessIndex].join("");
 
   const letterAccurence = useMemo(() => {
+    if (!WORD) return {};
     const result: { [key: string]: number } = {};
     if (!isLoadingWord) {
       for (const char of WORD) {
@@ -65,6 +66,7 @@ function App() {
 
   useEffect(() => {
     const colorTiles = () => {
+      if (!WORD) return;
       const newColorTiles = [...tilesColors];
       const newColorTile = [...newColorTiles[guessIndex]];
 
