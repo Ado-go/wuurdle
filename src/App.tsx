@@ -25,6 +25,7 @@ const fetchValidWord = async (): Promise<string> => {
 
 function App() {
   const queryClient = useQueryClient();
+  const [gameOver, setGameOver] = useState(false);
   const [guesses, setGuesses] = useState(Array(6).fill(Array(5).fill("")));
 
   const [tilesColors, setTilesColors] = useState(
@@ -40,9 +41,17 @@ function App() {
     refetchOnWindowFocus: false,
   });
 
-  const WORD_TO_CHECK = guesses[guessIndex].join("");
+  const handleResest = () => {
+    setGuesses(Array(6).fill(Array(5).fill("")));
+    setTilesColors(Array(6).fill(Array(5).fill("white")));
+    setGuessIndex(0);
+    setLetterIndex(0);
+    setAllowType(true);
+    setGameOver(false);
+    queryClient.invalidateQueries(["words"]);
+  };
 
-  console.log("correct word is: " + WORD);
+  const WORD_TO_CHECK = guesses[guessIndex].join("");
 
   const letterAccurence = useMemo(() => {
     const result: { [key: string]: number } = {};
@@ -93,9 +102,11 @@ function App() {
       colorTiles();
       if (guesses[guessIndex].join("") === WORD) {
         setAllowType(false);
+        setGameOver(true);
         alert("You win");
       } else if (guessIndex === 5) {
         alert("You lost, word was: " + WORD);
+        setGameOver(true);
       }
     };
 
@@ -129,8 +140,10 @@ function App() {
           .then((data) => {
             if (Array.isArray(data)) {
               checkGuess();
-              setGuessIndex((prev) => prev + 1);
-              setLetterIndex(0);
+              if (guessIndex < 5) {
+                setGuessIndex((prev) => prev + 1);
+                setLetterIndex(0);
+              }
             } else {
               alert("That word does not exist or at least I do not know it");
             }
@@ -163,7 +176,14 @@ function App() {
         {guesses.map((guess, index) => (
           <Line key={index} word={guess} tilesColor={tilesColors[index]} />
         ))}
-        {<div></div>}
+        {gameOver && (
+          <button
+            className="cursor-pointer border-2 p-5 rounded-lg transition-colors duration-300 ease-in-out hover:bg-gray-200"
+            onClick={() => handleResest()}
+          >
+            NEW WORD
+          </button>
+        )}
       </div>
     </>
   );
