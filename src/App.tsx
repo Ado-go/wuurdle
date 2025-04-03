@@ -103,7 +103,7 @@ function App() {
       if (guesses[guessIndex].join("") === WORD) {
         setAllowType(false);
         setGameOver(true);
-        alert("You win");
+        alert("You won");
       } else if (guessIndex === 5) {
         alert("You lost, word was: " + WORD);
         setGameOver(true);
@@ -146,7 +146,7 @@ function App() {
                 setLetterIndex(0);
               }
             } else {
-              alert("That word does not exist or at least I do not know it");
+              alert("That word does not exist, or at least I don't know it.");
             }
           });
       }
