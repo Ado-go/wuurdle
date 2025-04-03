@@ -51,9 +51,7 @@ function App() {
     queryClient.invalidateQueries(["words"]);
   };
 
-  const WORD_TO_CHECK = guesses[guessIndex].join("");
-
-  const letterAccurence = useMemo(() => {
+  const lettersFrequency = useMemo(() => {
     if (!WORD) return {};
     const result: { [key: string]: number } = {};
     if (!isLoadingWord) {
@@ -70,11 +68,11 @@ function App() {
       const newColorTiles = [...tilesColors];
       const newColorTile = [...newColorTiles[guessIndex]];
 
-      const guessLetterFreguency: { [key: string]: number } = {};
+      const guessLettersFreguency: { [key: string]: number } = {};
       for (let i = 0; i < newColorTile.length; i++) {
         if (WORD[i] === guesses[guessIndex][i]) {
-          guessLetterFreguency[WORD[i]] =
-            (guessLetterFreguency[WORD[i]] || 0) + 1;
+          guessLettersFreguency[WORD[i]] =
+            (guessLettersFreguency[WORD[i]] || 0) + 1;
           newColorTile[i] = "green-300";
         }
       }
@@ -83,11 +81,11 @@ function App() {
         if (newColorTile[i] === "green-300") continue;
         if (WORD.includes(guesses[guessIndex][i])) {
           if (
-            letterAccurence[guesses[guessIndex][i]] >
-            (guessLetterFreguency[guesses[guessIndex][i]] || 0)
+            lettersFrequency[guesses[guessIndex][i]] >
+            (guessLettersFreguency[guesses[guessIndex][i]] || 0)
           ) {
-            guessLetterFreguency[guesses[guessIndex][i]] =
-              (guessLetterFreguency[guesses[guessIndex][i]] || 0) + 1;
+            guessLettersFreguency[guesses[guessIndex][i]] =
+              (guessLettersFreguency[guesses[guessIndex][i]] || 0) + 1;
             newColorTile[i] = "yellow-300";
           } else {
             newColorTile[i] = "gray-300";
@@ -131,6 +129,7 @@ function App() {
         setGuesses(newGuesses);
         setLetterIndex((prev) => prev + 1);
       } else if (e.key === "Enter") {
+        const WORD_TO_CHECK = guesses[guessIndex].join("");
         queryClient
           .fetchQuery({
             queryKey: ["exist", WORD_TO_CHECK],
@@ -157,11 +156,10 @@ function App() {
     return () => document.removeEventListener("keydown", typeWord);
   }, [
     WORD,
-    WORD_TO_CHECK,
     allowType,
     guessIndex,
     guesses,
-    letterAccurence,
+    lettersFrequency,
     letterIndex,
     queryClient,
     tilesColors,
