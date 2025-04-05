@@ -134,6 +134,7 @@ function App() {
 
   const addLetter = useCallback(
     (letter: string) => {
+      if (!allowType) return;
       const newGuesses = [...guesses];
       const newActualGuess = [...newGuesses[guessIndex]];
       newActualGuess[letterIndex] = letter;
@@ -145,6 +146,7 @@ function App() {
   );
 
   const removeLetter = useCallback(() => {
+    if (!allowType) return;
     const newGuesses = [...guesses];
     const newActualGuess = [...newGuesses[guessIndex]];
     newActualGuess[letterIndex - 1] = "";
@@ -154,6 +156,7 @@ function App() {
   }, [guessIndex, guesses, letterIndex]);
 
   const submitWord = useCallback(() => {
+    if (!allowType) return;
     const WORD_TO_CHECK = guesses[guessIndex].join("");
     queryClient
       .fetchQuery({

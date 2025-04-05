@@ -24,7 +24,7 @@ export default function Keyboard({
                 <div
                   onClick={() => handleKeyClick(letter)}
                   key={letter}
-                  className={`h-10 p-4 pb-10 mb-2 rounded-xl transition-colors duration-500 ease-in-out ${
+                  className={`h-10 p-4 pb-10 mb-2 rounded-xl select-none transition-colors duration-500 ease-in-out ${
                     usedLetters[letter]
                       ? `${colors[usedLetters[letter]]}`
                       : "bg-gray-200"
@@ -40,7 +40,7 @@ export default function Keyboard({
                 </div>
               );
             })}
-            <br />
+            <br className="select-none" />
           </div>
         );
       })}
