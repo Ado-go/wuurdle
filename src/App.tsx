@@ -1,7 +1,8 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import "./App.css";
 
 import Line from "./components/Line";
+import Keyboard from "./components/Keyboard";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 const WORD_API = "https://random-word-api.herokuapp.com/word?length=5";
@@ -62,55 +63,55 @@ function App() {
     return result;
   }, [WORD, isLoadingWord]);
 
-  useEffect(() => {
-    const colorTiles = () => {
-      if (!WORD) return;
-      const newColorTiles = [...tilesColors];
-      const newColorTile = [...newColorTiles[guessIndex]];
+  const colorTiles = useCallback(() => {
+    if (!WORD) return;
+    const newColorTiles = [...tilesColors];
+    const newColorTile = [...newColorTiles[guessIndex]];
 
-      const guessLettersFreguency: { [key: string]: number } = {};
-      for (let i = 0; i < newColorTile.length; i++) {
-        if (WORD[i] === guesses[guessIndex][i]) {
-          guessLettersFreguency[WORD[i]] =
-            (guessLettersFreguency[WORD[i]] || 0) + 1;
-          newColorTile[i] = "green-300";
-        }
+    const guessLettersFreguency: { [key: string]: number } = {};
+    for (let i = 0; i < newColorTile.length; i++) {
+      if (WORD[i] === guesses[guessIndex][i]) {
+        guessLettersFreguency[WORD[i]] =
+          (guessLettersFreguency[WORD[i]] || 0) + 1;
+        newColorTile[i] = "green-300";
       }
+    }
 
-      for (let i = 0; i < newColorTile.length; i++) {
-        if (newColorTile[i] === "green-300") continue;
-        if (WORD.includes(guesses[guessIndex][i])) {
-          if (
-            lettersFrequency[guesses[guessIndex][i]] >
-            (guessLettersFreguency[guesses[guessIndex][i]] || 0)
-          ) {
-            guessLettersFreguency[guesses[guessIndex][i]] =
-              (guessLettersFreguency[guesses[guessIndex][i]] || 0) + 1;
-            newColorTile[i] = "yellow-300";
-          } else {
-            newColorTile[i] = "gray-300";
-          }
+    for (let i = 0; i < newColorTile.length; i++) {
+      if (newColorTile[i] === "green-300") continue;
+      if (WORD.includes(guesses[guessIndex][i])) {
+        if (
+          lettersFrequency[guesses[guessIndex][i]] >
+          (guessLettersFreguency[guesses[guessIndex][i]] || 0)
+        ) {
+          guessLettersFreguency[guesses[guessIndex][i]] =
+            (guessLettersFreguency[guesses[guessIndex][i]] || 0) + 1;
+          newColorTile[i] = "yellow-300";
         } else {
           newColorTile[i] = "gray-300";
         }
+      } else {
+        newColorTile[i] = "gray-300";
       }
-      newColorTiles[guessIndex] = newColorTile;
-      setTilesColors(newColorTiles);
-    };
+    }
+    newColorTiles[guessIndex] = newColorTile;
+    setTilesColors(newColorTiles);
+  }, [WORD, guessIndex, guesses, lettersFrequency, tilesColors]);
 
-    const checkGuess = () => {
-      colorTiles();
-      if (guesses[guessIndex].join("") === WORD) {
-        setAllowType(false);
-        setGameOver(true);
-        alert("You won");
-      } else if (guessIndex === 5) {
-        alert("You lost, word was: " + WORD);
-        setGameOver(true);
-      }
-    };
+  const checkGuess = useCallback(() => {
+    colorTiles();
+    if (guesses[guessIndex].join("") === WORD) {
+      setAllowType(false);
+      setGameOver(true);
+      alert("You won");
+    } else if (guessIndex === 5) {
+      alert("You lost, word was: " + WORD);
+      setGameOver(true);
+    }
+  }, [WORD, colorTiles, guessIndex, guesses]);
 
-    const typeWord = (e: KeyboardEvent) => {
+  const typeWord = useCallback(
+    (e: KeyboardEvent) => {
       if (e.repeat || guessIndex > 5 || !allowType) return;
       if (e.key === "Backspace") {
         if (letterIndex === 0) return;
@@ -150,20 +151,56 @@ function App() {
             }
           });
       }
-    };
+    },
+    [allowType, checkGuess, guessIndex, guesses, letterIndex, queryClient]
+  );
 
+  useEffect(() => {
     document.addEventListener("keydown", typeWord);
     return () => document.removeEventListener("keydown", typeWord);
-  }, [
-    WORD,
-    allowType,
-    guessIndex,
-    guesses,
-    lettersFrequency,
-    letterIndex,
-    queryClient,
-    tilesColors,
-  ]);
+  }, [typeWord]);
+
+  const handleKeyClick = (letter: string) => {
+    if (letter === "0") {
+      const WORD_TO_CHECK = guesses[guessIndex].join("");
+      queryClient
+        .fetchQuery({
+          queryKey: ["exist", WORD_TO_CHECK],
+          queryFn: async () => {
+            const res = await fetch(WORD_EXIST_API + WORD_TO_CHECK);
+            return res.json();
+          },
+        })
+        .then((data) => {
+          if (Array.isArray(data)) {
+            checkGuess();
+            if (guessIndex < 5) {
+              setGuessIndex((prev) => prev + 1);
+              setLetterIndex(0);
+            }
+          } else {
+            alert("That word does not exist, or at least I don't know it.");
+          }
+        });
+    } else if (letter === "1") {
+      if (letterIndex === 0) return;
+      const newGuesses = [...guesses];
+      const newActualGuess = [...newGuesses[guessIndex]];
+      newActualGuess[letterIndex - 1] = "";
+      newGuesses[guessIndex] = newActualGuess;
+      setGuesses(newGuesses);
+      setLetterIndex((prev) => prev - 1);
+    } else {
+      if (letterIndex >= 5) return;
+      const newGuesses = [...guesses];
+      const newActualGuess = [...newGuesses[guessIndex]];
+      newActualGuess[letterIndex] = letter;
+      newGuesses[guessIndex] = newActualGuess;
+      setGuesses(newGuesses);
+      setLetterIndex((prev) => prev + 1);
+    }
+    console.log(letter);
+  };
 
   if (isLoadingWord) {
     return <p>Loading...</p>;
@@ -176,6 +213,9 @@ function App() {
         {guesses.map((guess, index) => (
           <Line key={index} word={guess} tilesColor={tilesColors[index]} />
         ))}
+
+        <Keyboard handleKeyClick={(letter: string) => handleKeyClick(letter)} />
+
         {gameOver && (
           <button
             className="cursor-pointer border-2 p-5 rounded-lg transition-colors duration-300 ease-in-out hover:bg-gray-200"
