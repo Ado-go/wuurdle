@@ -63,6 +63,28 @@ function App() {
     return result;
   }, [WORD, isLoadingWord]);
 
+  const usedLetters = useMemo(() => {
+    const result: { [key: string]: string } = {};
+    for (let i = 0; i < guessIndex; i++) {
+      for (let j = 0; j < guesses[i].length; j++) {
+        const char = guesses[i][j];
+        const tileColor = tilesColors[i][j];
+        if (
+          tileColor === "gray-300" &&
+          result[char] !== "yellow-300" &&
+          result[char] !== "green-300"
+        ) {
+          result[char] = "gray-400";
+        } else if (tileColor === "yellow-300" && result[char] !== "green-300") {
+          result[char] = "yellow-300";
+        } else {
+          result[char] = "green-300";
+        }
+      }
+    }
+    return result;
+  }, [guessIndex, guesses, tilesColors]);
+
   const colorTiles = useCallback(() => {
     if (!WORD) return;
     const newColorTiles = [...tilesColors];
@@ -193,13 +215,16 @@ function App() {
 
   return (
     <>
-      <div className="flex flex-col items-center mt-5 p-10 gap-5">
+      <div className="flex flex-col items-center gap-5">
         <h1 className="text-5xl font-sans">WUURDLE</h1>
         {guesses.map((guess, index) => (
           <Line key={index} word={guess} tilesColor={tilesColors[index]} />
         ))}
 
-        <Keyboard handleKeyClick={(letter: string) => handleKeyClick(letter)} />
+        <Keyboard
+          usedLetters={usedLetters}
+          handleKeyClick={(letter: string) => handleKeyClick(letter)}
+        />
 
         {gameOver && (
           <button
