@@ -15,11 +15,11 @@ export default function Line({
   };
 
   return (
-    <div className="flex gap-5">
+    <div className="flex gap-2">
       {word.map((letter, index) => {
         return (
           <div
-            className={`w-20 h-20 border-2 rounded-lg flex items-center justify-center transition-colors duration-500 ease-in-out ${
+            className={`w-17 h-17 border-2 rounded-lg flex items-center justify-center transition-colors duration-500 ease-in-out ${
               colors[tilesColor[index]]
             }`}
             key={index}

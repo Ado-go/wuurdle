@@ -1,3 +1,5 @@
+export type LetterColor = "green-300" | "yellow-300" | "gray-400";
+
 import { useState, useEffect, useMemo, useCallback } from "react";
 import "./App.css";
 
@@ -64,7 +66,7 @@ function App() {
   }, [WORD, isLoadingWord]);
 
   const usedLetters = useMemo(() => {
-    const result: { [key: string]: string } = {};
+    const result: { [key: string]: LetterColor } = {};
     for (let i = 0; i < guessIndex; i++) {
       for (let j = 0; j < guesses[i].length; j++) {
         const char = guesses[i][j];
@@ -142,7 +144,7 @@ function App() {
       setGuesses(newGuesses);
       setLetterIndex((prev) => prev + 1);
     },
-    [guessIndex, guesses, letterIndex]
+    [allowType, guessIndex, guesses, letterIndex]
   );
 
   const removeLetter = useCallback(() => {
@@ -153,7 +155,7 @@ function App() {
     newGuesses[guessIndex] = newActualGuess;
     setGuesses(newGuesses);
     setLetterIndex((prev) => prev - 1);
-  }, [guessIndex, guesses, letterIndex]);
+  }, [allowType, guessIndex, guesses, letterIndex]);
 
   const submitWord = useCallback(() => {
     if (!allowType) return;
@@ -177,7 +179,7 @@ function App() {
           alert("That word does not exist, or at least I don't know it.");
         }
       });
-  }, [checkGuess, guessIndex, guesses, queryClient]);
+  }, [allowType, checkGuess, guessIndex, guesses, queryClient]);
 
   const typeWord = useCallback(
     (e: KeyboardEvent) => {
@@ -218,7 +220,7 @@ function App() {
 
   return (
     <>
-      <div className="flex flex-col items-center gap-5">
+      <div className="flex flex-col items-center gap-2">
         <h1 className="text-5xl font-sans">WUURDLE</h1>
         {guesses.map((guess, index) => (
           <Line key={index} word={guess} tilesColor={tilesColors[index]} />

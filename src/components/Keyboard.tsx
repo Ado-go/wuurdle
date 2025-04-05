@@ -1,4 +1,4 @@
-type LetterColor = "green-300" | "yellow-300" | "gray-400";
+import { LetterColor } from "../App";
 
 export default function Keyboard({
   usedLetters,
