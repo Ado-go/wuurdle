@@ -18,7 +18,10 @@ export default function Keyboard({
     <div>
       {letterRows.map((row) => {
         return (
-          <div className="flex gap-2 justify-center" key={row}>
+          <div
+            className="flex flex-wrap justify-center gap-1 sm:gap-2 md:gap-3 w-full"
+            key={row}
+          >
             {row.split("").map((letter) => {
               return (
                 <div

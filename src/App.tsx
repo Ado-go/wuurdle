@@ -219,9 +219,9 @@ function App() {
   }
 
   return (
-    <>
-      <div className="flex flex-col items-center gap-2">
-        <h1 className="text-5xl font-sans">WUURDLE</h1>
+    <div className="flex justify-center">
+      <div className="flex flex-col items-center gap-2 max-w-[80%] md:max-w-[80%] sm:max-w-[50%]">
+        <h1 className="sm:text-5xl text-2xl font-sans">WUURDLE</h1>
         {guesses.map((guess, index) => (
           <Line key={index} word={guess} tilesColor={tilesColors[index]} />
         ))}
@@ -240,7 +240,7 @@ function App() {
           </button>
         )}
       </div>
-    </>
+    </div>
   );
 }
 
