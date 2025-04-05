@@ -5,7 +5,10 @@ import "./App.css";
 
 import Line from "./components/Line";
 import Keyboard from "./components/Keyboard";
+import Spinner from "./components/Spinner";
+
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import Toast from "./components/Toast";
 
 const WORD_API = "https://random-word-api.herokuapp.com/word?length=5";
 const WORD_EXIST_API = "https://api.dictionaryapi.dev/api/v2/entries/en/";
@@ -38,6 +41,7 @@ function App() {
   const [guessIndex, setGuessIndex] = useState(0);
   const [letterIndex, setLetterIndex] = useState(0);
   const [allowType, setAllowType] = useState(true);
+  const [toast, setToast] = useState("");
   const { data: WORD, isLoading: isLoadingWord } = useQuery({
     queryFn: fetchValidWord,
     queryKey: ["word"],
@@ -127,16 +131,18 @@ function App() {
     if (guesses[guessIndex].join("") === WORD) {
       setAllowType(false);
       setGameOver(true);
-      alert("You won");
+      setToast("You won");
+      setTimeout(() => setToast(""), 2000);
     } else if (guessIndex === 5) {
-      alert("You lost, word was: " + WORD);
+      setAllowType(false);
       setGameOver(true);
+      setToast(WORD ? WORD.toUpperCase() : "missing word");
+      setTimeout(() => setToast(""), 4000);
     }
   }, [WORD, colorTiles, guessIndex, guesses]);
 
   const addLetter = useCallback(
     (letter: string) => {
-      if (!allowType) return;
       const newGuesses = [...guesses];
       const newActualGuess = [...newGuesses[guessIndex]];
       newActualGuess[letterIndex] = letter;
@@ -144,21 +150,19 @@ function App() {
       setGuesses(newGuesses);
       setLetterIndex((prev) => prev + 1);
     },
-    [allowType, guessIndex, guesses, letterIndex]
+    [guessIndex, guesses, letterIndex]
   );
 
   const removeLetter = useCallback(() => {
-    if (!allowType) return;
     const newGuesses = [...guesses];
     const newActualGuess = [...newGuesses[guessIndex]];
     newActualGuess[letterIndex - 1] = "";
     newGuesses[guessIndex] = newActualGuess;
     setGuesses(newGuesses);
     setLetterIndex((prev) => prev - 1);
-  }, [allowType, guessIndex, guesses, letterIndex]);
+  }, [guessIndex, guesses, letterIndex]);
 
   const submitWord = useCallback(() => {
-    if (!allowType) return;
     const WORD_TO_CHECK = guesses[guessIndex].join("");
     queryClient
       .fetchQuery({
@@ -176,10 +180,13 @@ function App() {
             setLetterIndex(0);
           }
         } else {
-          alert("That word does not exist, or at least I don't know it.");
+          if (toast === "") {
+            setToast("That word does not exist, or at least I don't know it.");
+            setTimeout(() => setToast(""), 2000);
+          }
         }
       });
-  }, [allowType, checkGuess, guessIndex, guesses, queryClient]);
+  }, [checkGuess, guessIndex, guesses, queryClient, toast]);
 
   const typeWord = useCallback(
     (e: KeyboardEvent) => {
@@ -198,6 +205,7 @@ function App() {
   );
 
   const handleKeyClick = (letter: string) => {
+    if (!allowType) return;
     if (letter === "0") {
       submitWord();
     } else if (letter === "1") {
@@ -215,12 +223,17 @@ function App() {
   }, [typeWord]);
 
   if (isLoadingWord) {
-    return <p>Loading...</p>;
+    return (
+      <div className="flex justify-center mt-25">
+        <Spinner />
+      </div>
+    );
   }
 
   return (
     <div className="flex justify-center">
-      <div className="flex flex-col items-center gap-2 max-w-[80%] md:max-w-[80%] sm:max-w-[50%]">
+      {toast !== "" && <Toast text={toast} />}
+      <div className="flex flex-col items-center mt-10 gap-2 max-w-[80%] md:max-w-[80%] sm:max-w-[50%]">
         <h1 className="sm:text-5xl text-2xl font-sans">WUURDLE</h1>
         {guesses.map((guess, index) => (
           <Line key={index} word={guess} tilesColor={tilesColors[index]} />
