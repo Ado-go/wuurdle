@@ -110,96 +110,82 @@ function App() {
     }
   }, [WORD, colorTiles, guessIndex, guesses]);
 
-  const typeWord = useCallback(
-    (e: KeyboardEvent) => {
-      if (e.repeat || guessIndex > 5 || !allowType) return;
-      if (e.key === "Backspace") {
-        if (letterIndex === 0) return;
-        const newGuesses = [...guesses];
-        const newActualGuess = [...newGuesses[guessIndex]];
-        newActualGuess[letterIndex - 1] = "";
-        newGuesses[guessIndex] = newActualGuess;
-        setGuesses(newGuesses);
-        setLetterIndex((prev) => prev - 1);
-      } else if (letterIndex < 5) {
-        if (!/^[a-zA-Z]$/.test(e.key)) return;
-        const newGuesses = [...guesses];
-        const newActualGuess = [...newGuesses[guessIndex]];
-        newActualGuess[letterIndex] = e.key.toLowerCase();
-        newGuesses[guessIndex] = newActualGuess;
-        setGuesses(newGuesses);
-        setLetterIndex((prev) => prev + 1);
-      } else if (e.key === "Enter") {
-        const WORD_TO_CHECK = guesses[guessIndex].join("");
-        queryClient
-          .fetchQuery({
-            queryKey: ["exist", WORD_TO_CHECK],
-            queryFn: async () => {
-              const res = await fetch(WORD_EXIST_API + WORD_TO_CHECK);
-              return res.json();
-            },
-          })
-          .then((data) => {
-            if (Array.isArray(data)) {
-              checkGuess();
-              if (guessIndex < 5) {
-                setGuessIndex((prev) => prev + 1);
-                setLetterIndex(0);
-              }
-            } else {
-              alert("That word does not exist, or at least I don't know it.");
-            }
-          });
-      }
-    },
-    [allowType, checkGuess, guessIndex, guesses, letterIndex, queryClient]
-  );
-
-  useEffect(() => {
-    document.addEventListener("keydown", typeWord);
-    return () => document.removeEventListener("keydown", typeWord);
-  }, [typeWord]);
-
-  const handleKeyClick = (letter: string) => {
-    if (letter === "0") {
-      const WORD_TO_CHECK = guesses[guessIndex].join("");
-      queryClient
-        .fetchQuery({
-          queryKey: ["exist", WORD_TO_CHECK],
-          queryFn: async () => {
-            const res = await fetch(WORD_EXIST_API + WORD_TO_CHECK);
-            return res.json();
-          },
-        })
-        .then((data) => {
-          if (Array.isArray(data)) {
-            checkGuess();
-            if (guessIndex < 5) {
-              setGuessIndex((prev) => prev + 1);
-              setLetterIndex(0);
-            }
-          } else {
-            alert("That word does not exist, or at least I don't know it.");
-          }
-        });
-    } else if (letter === "1") {
-      if (letterIndex === 0) return;
-      const newGuesses = [...guesses];
-      const newActualGuess = [...newGuesses[guessIndex]];
-      newActualGuess[letterIndex - 1] = "";
-      newGuesses[guessIndex] = newActualGuess;
-      setGuesses(newGuesses);
-      setLetterIndex((prev) => prev - 1);
-    } else {
-      if (letterIndex >= 5) return;
+  const addLetter = useCallback(
+    (letter: string) => {
       const newGuesses = [...guesses];
       const newActualGuess = [...newGuesses[guessIndex]];
       newActualGuess[letterIndex] = letter;
       newGuesses[guessIndex] = newActualGuess;
       setGuesses(newGuesses);
       setLetterIndex((prev) => prev + 1);
+    },
+    [guessIndex, guesses, letterIndex]
+  );
+
+  const removeLetter = useCallback(() => {
+    const newGuesses = [...guesses];
+    const newActualGuess = [...newGuesses[guessIndex]];
+    newActualGuess[letterIndex - 1] = "";
+    newGuesses[guessIndex] = newActualGuess;
+    setGuesses(newGuesses);
+    setLetterIndex((prev) => prev - 1);
+  }, [guessIndex, guesses, letterIndex]);
+
+  const submitWord = useCallback(() => {
+    const WORD_TO_CHECK = guesses[guessIndex].join("");
+    queryClient
+      .fetchQuery({
+        queryKey: ["exist", WORD_TO_CHECK],
+        queryFn: async () => {
+          const res = await fetch(WORD_EXIST_API + WORD_TO_CHECK);
+          return res.json();
+        },
+      })
+      .then((data) => {
+        if (Array.isArray(data)) {
+          checkGuess();
+          if (guessIndex < 5) {
+            setGuessIndex((prev) => prev + 1);
+            setLetterIndex(0);
+          }
+        } else {
+          alert("That word does not exist, or at least I don't know it.");
+        }
+      });
+  }, [checkGuess, guessIndex, guesses, queryClient]);
+
+  const typeWord = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.repeat || guessIndex > 5 || !allowType) return;
+      if (e.key === "Backspace") {
+        if (letterIndex === 0) return;
+        removeLetter();
+      } else if (letterIndex < 5) {
+        if (!/^[a-zA-Z]$/.test(e.key)) return;
+        addLetter(e.key.toLowerCase());
+      } else if (e.key === "Enter") {
+        submitWord();
+      }
+    },
+    [addLetter, allowType, guessIndex, letterIndex, removeLetter, submitWord]
+  );
+
+  const handleKeyClick = (letter: string) => {
+    if (letter === "0") {
+      submitWord();
+    } else if (letter === "1") {
+      if (letterIndex === 0) return;
+      removeLetter();
+    } else {
+      if (letterIndex >= 5) return;
+      addLetter(letter);
     }
   };
+
+  useEffect(() => {
+    document.addEventListener("keydown", typeWord);
+    return () => document.removeEventListener("keydown", typeWord);
+  }, [typeWord]);
 
   if (isLoadingWord) {
     return <p>Loading...</p>;
