@@ -199,7 +199,6 @@ function App() {
       setGuesses(newGuesses);
       setLetterIndex((prev) => prev + 1);
     }
-    console.log(letter);
   };
 
   if (isLoadingWord) {
