@@ -12,4 +12,4 @@ npm run dev
 
 # API
 
-Words are provided using https://random-word-api.herokuapp.com API
+Words are provided using the https://random-word-api.herokuapp.com API
