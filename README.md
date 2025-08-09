@@ -1,8 +1,8 @@
 # Wuurdle
 
-A copy of a well-known word game. Type 5 letter word and submit to find out if you guessed the word correctly.
-If the letter is in the word it will turn yellow after submission, if it is even on correct spot it will turn green. It
-will turn gray otherwise.
+A copy of a well-known word game. Type a 5-letter word and submit it to find out if you guessed correctly.
+If a letter is in the word, it will turn yellow after submission; if it is in the correct spot, it will turn green.
+Otherwise, it will turn gray.
 
 # Installation
 
