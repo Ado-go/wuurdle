@@ -55,7 +55,7 @@ function App() {
     setLetterIndex(0);
     setAllowType(true);
     setGameOver(false);
-    queryClient.invalidateQueries(["words"]);
+    queryClient.invalidateQueries({ queryKey: ["word"] });
   };
 
   const lettersFrequency = useMemo(() => {
