@@ -13,4 +13,5 @@ npm run dev
 # API
 
 Words are provided using the https://random-word-api.herokuapp.com API
+
 Words existence is checked using the https://dictionaryapi.dev API
